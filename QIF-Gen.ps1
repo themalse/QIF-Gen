@@ -1,14 +1,15 @@
-$Host.UI.RawUI.BackgroundColor = 'black'
-$revision = 'v0.62 Alpha'
-$QIFFileName = 'test.QIF'
+$revision = 'v0.7'
+$QIFFileName = 'test.QIF' #File name
+
+# Clear variables if used Globally
 $StartDate = ''
 $EndDate = ''
 $TransactionsPerDay = ''
 $TotalDays = ''
 
-# VISUAL FORMATS #
+# UI COLOUR FORMATTING #
 $IsDefaultFG = (Get-Host).UI.RawUI.ForegroundColor
-$IsDefaultBG = (Get-Host).UI.RawUI.BackgroundColor
+$IsDefaultBG = 'black'
 $IsInvalidFG = 'red'
 $IsInvalidBG = $IsDefaultBG
 $lblInFocusFG = 'cyan'
@@ -20,6 +21,8 @@ $lblIsSetBG = $IsDefaultBG
 $IsSetFG = 'green'
 $IsSetBG = $IsDefaultBG
 
+# Set UI background colour to black
+$Host.UI.RawUI.BackgroundColor = 'black'
 
 $lblStartDateFG = $IsDefaultFG
 $lblStartDateBG = $IsDefaultFG
@@ -42,10 +45,6 @@ $EndDateValid = $false
 $TPerDayValid = $false
 $IsConfirmed = $false
 $AllValid = $false
-
-
-
-
 
 function Test-Date($String) {
     try { [DateTime]::ParseExact($String,'dd/MM/yyyy',[System.Globalization.CultureInfo]'en-NZ')
@@ -166,8 +165,8 @@ function Update-UI {
     Write-Host
 }
 
-Clear-Host
-Write-Host
+Clear-Host #Required if script run as a command
+Write-Host #Blank 
 
 while ($AllValid -eq $false) {
     Update-UI
