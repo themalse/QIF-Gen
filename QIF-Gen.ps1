@@ -5,13 +5,15 @@ $StartDate = ''
 $EndDate = ''
 $TransactionsPerDay = ''
 $TotalDays = ''
-$QIFFileName = 'test.QIF' #File name to use as default
+$QIFFileName = 'dummy.qif' #File name to use as default
+# Summary Values
+$TransactionCount = 0
 
 # UI colour formatting | [Forground Label,Background Label,Foreground Val,Background Val]
 $DefaultCol = 'gray','black','gray','black'
-$ValidCol = 'green',$DefaultCol[1],'green',$DefaultCol[1]
+$ValidCol = 'white',$DefaultCol[1],'green',$DefaultCol[1]
 $InvalidCol = 'red',$DefaultCol[1],'red',$DefaultCol[1]
-$InFocusCol = 'cyan',$DefaultCol[1],'cyan',$DefaultCol[1]
+$InFocusCol = 'cyan',$DefaultCol[1],'red',$DefaultCol[1]
 
 # Set default UI colours
 $Host.UI.RawUI.ForegroundColor = $DefaultCol[0]
@@ -69,32 +71,31 @@ function Update-UI {
                     $TransactionsCol = $ValidCol
                     }
     Clear-Host
-    Write-Host 'QIF-Gen'$revision': Builds a QIF file with dummy data'
+    Write-Host 'QIF-Gen'$revision': Builds a QIF filled with dummy data'
     Write-Host
-    Write-Host "Date Ranges to use for Dummy QIF file"
     Write-Host "Start Date: " -NoNewline -ForegroundColor $StartDateCol[0] -BackgroundColor $StartDateCol[1]
     if ($StartDateValid[1] -eq $false) {
-        Write-Host $StartDate -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
+        Write-Host $StartDate -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
     }   else {
-        Write-Host $StartDate.ToString("dd/MM/yyyy") -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
+        Write-Host $StartDate.ToString("dd/MM/yyyy") -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
         }
     Write-Host "End Date: " -NoNewline -ForegroundColor $EndDateCol[0] -BackgroundColor $EndDateCol[1]
     if ($EndDateValid[1] -eq $false) {
-        Write-Host $EndDate -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
+        Write-Host $EndDate -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
     }   else {
-            Write-Host $EndDate.ToString("dd/MM/yyyy") -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
+            Write-Host $EndDate.ToString("dd/MM/yyyy") -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
+            Write-Host 'Days in range: ' -NoNewline -ForegroundColor $EndDateCol[0] -BackgroundColor $EndDateCol[1]
         }
+    Write-Host $TotalDays -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3]
     Write-Host
-    Write-Host "Transactions/Day: " -NoNewline -ForegroundColor $TransactionsCol[0] -BackgroundColor $TransactionsCol[1]
-    Write-Host $TransactionsPerDay -ForegroundColor $TransactionsCol[2] -BackgroundColor $TransactionsCol[3]
-    Write-Host
-    Write-Host "Total number of days: $TotalDays"
-    try { Test-Int $TotalDays | Out-Null
-        Write-Host 'Maxmimum possible number of transactions to generate:' ($TotalDays * $TransactionsPerDay) #ADDCOLOR
-    }
-    catch {
-        Write-Host "Maxmimum possible number of transactions to generate: $TotalDays" #ADDCOLOR
-    }
+    Write-Host 'Transactions/Day: ' -NoNewline -ForegroundColor $TransactionsCol[0] -BackgroundColor $TransactionsCol[1]
+    if ($TransactionsValid -eq $false) {
+        Write-Host $TransactionsPerDay -ForegroundColor $TransactionsCol[2] -BackgroundColor $TransactionsCol[3]
+    }   else {
+            Write-Host $TransactionsPerDay -ForegroundColor $TransactionsCol[2] -BackgroundColor $TransactionsCol[3]
+            Write-Host 'Maxmimum possible number of transactions to generate: ' -NoNewline -ForegroundColor $TransactionsCol[0] -BackgroundColor $TransactionsCol[1]
+            Write-Host ([int]$TransactionsPerDay * $TotalDays)-ForegroundColor $TransactionsCol[2] -BackgroundColor $TransactionsCol[3]
+        }
     Write-Host
 }
 
@@ -137,10 +138,13 @@ while ($AllValid -eq $false) {
                         $EndDate = $EndDateValid[0]
                         if ($StartDate -gt $EndDate) {
                             $EndDateValid[1] = $false
+                            $EndDate = $EndDate.ToString("dd/MM/yyyy")
+                            Update-UI
                             Write-Host 'End Date' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
                             Write-Host ' cannot be before the Start Date' -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
                         }   else {
                                 $EndDate = $EndDateValid[0]
+                                $TotalDays = (New-TimeSpan -Start $StartDate -End $EndDate).Days + 1
                                 Update-UI
                             }
                     }
@@ -148,7 +152,7 @@ while ($AllValid -eq $false) {
     }
 
     elseif ($TransactionsValid -eq $false) {
-        $TransactionsPerDay = Read-Host 'Enter maximum random transactions per day'
+        $TransactionsPerDay = Read-Host -Prompt 'Enter maximum random transactions per day'
         if ($TransactionsPerDay -eq '') {
             Update-UI
             Write-Host "Transactions/Day" -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
@@ -160,13 +164,12 @@ while ($AllValid -eq $false) {
                     Write-Host $TransactionsPerDay -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
                     Write-Host " must be an integer greater than or equal to 1" -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
                 }   else {
-                        $TotalDays = (New-TimeSpan -Start $StartDate -End $EndDate).Days + 1
                         Update-UI
-                        $msg = 'Are Transactions/Day value correct? [Y|N]' #ADDCOLOR
                         do {
-                            $response = Read-Host -Prompt $msg
+                            $response = Read-Host -Prompt 'Are Transactions/Day correct? [Y|N]' #ADDCOLOR?
                             if ($response -eq 'n') {
                                 $TransactionsValid = $false
+                                Update-UI
                                 $response = 'y'
                             }
                         } until ($response -eq 'y')
@@ -196,13 +199,21 @@ while ($AllValid -eq $false) {
                                             }
                                         "M"
                                         "^"
+                                        $TransactionCount++
                                     }
                                 }
                 Out-File .\$QIFFileName -Encoding ascii
                 Add-Content $QIFFileName '!Type:Bank'
                 Add-Content $QIFFileName $QIFContent
             }
-            Write-Host $QIFFileName 'is saved to:'(Get-Location).Path
+            Update-UI
+            Write-Host $QIFFileName -NoNewline -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+            Write-Host ' has been created with ' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+            Write-Host $TransactionCount -NoNewline -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3] 
+            Write-Host ' transactions.' -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+            Write-Host 'The file is saved to ' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+            Write-Host (Get-Location).Path -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+            Write-Host
             $response = 'n'
         } until ($response -eq 'n')
         Read-Host -Prompt "Press Enter exit the tool"
