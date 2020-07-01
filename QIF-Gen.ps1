@@ -5,7 +5,7 @@ $StartDate = ''
 $EndDate = ''
 $TransactionsPerDay = ''
 $TotalDays = ''
-$QIFFileName = 'dummy.qif' #File name to use as default
+$QIFFileName = 'dummy' #File name to use as default
 # Summary Values
 $TransactionCount = 0
 
@@ -202,6 +202,7 @@ while ($AllValid -eq $false) {
                                         $TransactionCount++
                                     }
                                 }
+                $QIFFileName = $QIFFileName + (Get-Date -Format yyyyMMdd-HHmmss) + '.qif'
                 Out-File .\$QIFFileName -Encoding ascii
                 Add-Content $QIFFileName '!Type:Bank'
                 Add-Content $QIFFileName $QIFContent
