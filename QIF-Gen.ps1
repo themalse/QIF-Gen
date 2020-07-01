@@ -1,7 +1,6 @@
+$revision = 'v0.8'
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-$revision = 'v0.8'
-
 # Clear variables if used Globally
 $StartDate = ''
 $EndDate = ''
@@ -226,13 +225,13 @@ while ($AllValid -eq $false) {
             Read-Host -Prompt "Press Enter exit the tool"
             $AllValid = $true
         }   else {
-                Write-Host 'File creation cancelled'
+                Write-Host 'File creation cancelled' -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
                 do {
-                    Write-Host '[' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+                    Write-Host '[' -NoNewline -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
                     Write-Host 'R' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
-                    Write-Host ']estart QIF-Gen or [' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+                    Write-Host ']estart or [' -NoNewline -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
                     Write-Host 'Q' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
-                    Write-Host ']uit? ' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+                    Write-Host ']uit? ' -NoNewline -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
                     $response = Read-Host
                     if ($response -eq 'q') {
                         $AllValid = $true
