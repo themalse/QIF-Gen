@@ -1,11 +1,20 @@
-$revision = 'v0.7'
+[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
+[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+$revision = 'v0.8'
 
 # Clear variables if used Globally
 $StartDate = ''
 $EndDate = ''
 $TransactionsPerDay = ''
 $TotalDays = ''
-$QIFFileName = 'dummy' #File name to use as default
+
+# Save Dialog settings
+$QIFFileName = 'DummyQIF_' # Default file name to use
+$SaveDialog = New-Object System.Windows.Forms.SaveFileDialog
+$SaveDialog.DefaultExt = 'qif'
+$SaveDialog.FileName = $QIFFileName + (Get-Date -Format yyyyMMdd-HHmmss) + '.qif'
+$SaveDialog.Filter = 'QIF File (*.qif)|*.qif'
+
 # Summary Values
 $TransactionCount = 0
 
@@ -29,7 +38,7 @@ $TransactionsValid = $false
 $AllValid = $false
 
 function Test-Date($String) {
-    try { [DateTime]::ParseExact($String,'dd/MM/yyyy',[System.Globalization.CultureInfo]'en-NZ')
+    try { [DateTime]::ParseExact($String,'d/M/yyyy',[System.Globalization.CultureInfo]'en-NZ')
         return $true
     }   catch 
         {
@@ -71,19 +80,21 @@ function Update-UI {
                     $TransactionsCol = $ValidCol
                     }
     Clear-Host
-    Write-Host 'QIF-Gen'$revision': Builds a QIF filled with dummy data'
+    Write-Host 'QIF-Gen ' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
+    Write-Host $revision -NoNewline -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3]
+    Write-Host ': Builds a QIF filled with dummy data' -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
     Write-Host
     Write-Host "Start Date: " -NoNewline -ForegroundColor $StartDateCol[0] -BackgroundColor $StartDateCol[1]
     if ($StartDateValid[1] -eq $false) {
         Write-Host $StartDate -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
     }   else {
-        Write-Host $StartDate.ToString("dd/MM/yyyy") -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
+        Write-Host $StartDate.ToString("d/M/yyyy") -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
         }
     Write-Host "End Date: " -NoNewline -ForegroundColor $EndDateCol[0] -BackgroundColor $EndDateCol[1]
     if ($EndDateValid[1] -eq $false) {
         Write-Host $EndDate -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
     }   else {
-            Write-Host $EndDate.ToString("dd/MM/yyyy") -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
+            Write-Host $EndDate.ToString("d/M/yyyy") -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
             Write-Host 'Days in range: ' -NoNewline -ForegroundColor $EndDateCol[0] -BackgroundColor $EndDateCol[1]
         }
     Write-Host $TotalDays -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3]
@@ -99,12 +110,11 @@ function Update-UI {
     Write-Host
 }
 
-Clear-Host #Clears terminal
 Update-UI
 
 while ($AllValid -eq $false) {
     if ($StartDateValid[1] -eq $false) {
-        $StartDate = Read-Host -Prompt 'Enter starting date (dd/MM/yyyy)' 
+        $StartDate = Read-Host -Prompt 'Enter start date (d/M/yyyy)' 
         if ($StartDate -eq '') {
             Update-UI
             Write-Host 'Start Date' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
@@ -123,7 +133,7 @@ while ($AllValid -eq $false) {
     }
 
     elseif ($EndDateValid[1] -eq $false) {
-        $EndDate = Read-Host -Prompt 'Enter ending date (dd/MM/yyyy)'
+        $EndDate = Read-Host -Prompt 'Enter end date (d/M/yyyy)'
         if ($EndDate -eq '') {
             Update-UI
             Write-Host 'End Date' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
@@ -138,7 +148,7 @@ while ($AllValid -eq $false) {
                         $EndDate = $EndDateValid[0]
                         if ($StartDate -gt $EndDate) {
                             $EndDateValid[1] = $false
-                            $EndDate = $EndDate.ToString("dd/MM/yyyy")
+                            $EndDate = $EndDate.ToString("d/M/yyyy")
                             Update-UI
                             Write-Host 'End Date' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
                             Write-Host ' cannot be before the Start Date' -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
@@ -166,58 +176,79 @@ while ($AllValid -eq $false) {
                 }   else {
                         Update-UI
                         do {
-                            $response = Read-Host -Prompt 'Are Transactions/Day correct? [Y|N]' #ADDCOLOR?
+                            Write-Host 'Create QIF file now [' -NoNewline -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+                            Write-Host 'Y'-NoNewline -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3] 
+                            Write-Host '|' -NoNewline -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+                            Write-Host 'N' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
+                            Write-Host ']? ' -NoNewline -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+                            $response = Read-Host
                             if ($response -eq 'n') {
                                 $TransactionsValid = $false
                                 Update-UI
                                 $response = 'y'
                             }
                         } until ($response -eq 'y')
-                        Update-UI
                     }
             }
     }
 
     elseif (($StartDateValid -eq $true) -and ($EndDateValid -eq $true) -and ($TransactionsValid -eq $true)) {
-        do {
-            $response = Read-Host -Prompt 'Create QIF? [Y|N]'
-            if ($response -eq 'y') {
-                $QIFContent =   for ($i = 0; $i -lt $TotalDays; $i++) {
-                                    $jcount = Get-Random -Minimum 1 -Maximum $TransactionsPerDay
-                                    for ($j = 0; $j -lt $jcount; $j++) {
-                                        $tempi = $StartDate.AddDays($i).ToString('dd/MM/yyyy')
-                                        "D$tempi"
-                                        $tempnum = 0 #Avoid creating $0.00 transaction
-                                        while ($tempnum -eq 0) {
-                                            $tempnum = [math]::Round((Get-Random -Minimum -100000.00 -Maximum 100000.00),2)
-                                        }
-                                        "T$tempnum"
-                                        if ($tempnum -lt 0) { #Determine if transaction is Withdrawal or Deposit
-                                            "PWithdrawal"
-                                        }   else {
-                                                "PDeposit"
-                                            }
-                                        "M"
-                                        "^"
-                                        $TransactionCount++
-                                    }
+        $QIFContent =   for ($i = 0; $i -lt $TotalDays; $i++) {
+                            $jcount = Get-Random -Minimum 1 -Maximum $TransactionsPerDay
+                            for ($j = 0; $j -lt $jcount; $j++) {
+                                $tempi = $StartDate.AddDays($i).ToString('dd/MM/yyyy')
+                                "D$tempi"
+                                $tempnum = 0 #Avoid creating $0.00 transaction
+                                while ($tempnum -eq 0) {
+                                    $tempnum = [math]::Round((Get-Random -Minimum -100000.00 -Maximum 100000.00),2)
                                 }
-                $QIFFileName = $QIFFileName + (Get-Date -Format yyyyMMdd-HHmmss) + '.qif'
-                Out-File .\$QIFFileName -Encoding ascii
-                Add-Content $QIFFileName '!Type:Bank'
-                Add-Content $QIFFileName $QIFContent
-            }
+                                "T$tempnum"
+                                if ($tempnum -lt 0) { #Determine if transaction is Withdrawal or Deposit
+                                    "PWithdrawal"
+                                }   else {
+                                        "PDeposit"
+                                    }
+                                "M"
+                                "^"
+                                $TransactionCount++
+                            }
+                        }
+        $result = $SaveDialog.ShowDialog()
+        if($result -eq 'OK') { 
+            '!Type:Bank'| Out-File -FilePath $SaveDialog.FileName -Encoding ascii
+            Add-Content $SaveDialog.FileName $QIFContent
             Update-UI
-            Write-Host $QIFFileName -NoNewline -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
-            Write-Host ' has been created with ' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
-            Write-Host $TransactionCount -NoNewline -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3] 
-            Write-Host ' transactions.' -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
-            Write-Host 'The file is saved to ' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
-            Write-Host (Get-Location).Path -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+            Write-Host $SaveDialog.FileName -NoNewline -ForegroundColor $InFocusCol[0] -BackgroundColor $InFocusCol[1]
+            Write-Host ' has been created with ' -NoNewline -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
+            Write-Host $TransactionCount -NoNewline -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3]
+            Write-Host ' transactions.' -ForegroundColor $ValidCol[0] -BackgroundColor $ValidCol[1]
             Write-Host
-            $response = 'n'
-        } until ($response -eq 'n')
-        Read-Host -Prompt "Press Enter exit the tool"
-        $AllValid = $true
+            Read-Host -Prompt "Press Enter exit the tool"
+            $AllValid = $true
+        }   else {
+                Write-Host 'File creation cancelled'
+                do {
+                    Write-Host '[' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+                    Write-Host 'R' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
+                    Write-Host ']estart QIF-Gen or [' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+                    Write-Host 'Q' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
+                    Write-Host ']uit? ' -NoNewline -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
+                    $response = Read-Host
+                    if ($response -eq 'q') {
+                        $AllValid = $true
+                        $response = 'r'
+                    }   elseif ($response -eq 'r') {
+                            $StartDate = ''
+                            $EndDate = ''
+                            $TransactionsPerDay = ''
+                            $TotalDays = ''
+                            $StartDateValid = $null,$false
+                            $EndDateValid = $null,$false
+                            $TransactionsValid = $false
+                            $AllValid = $false
+                            Update-UI
+                        }
+                } until ($response -eq 'r')
+            }
     }
 }
