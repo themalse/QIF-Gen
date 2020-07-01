@@ -199,7 +199,7 @@ while ($AllValid -eq $false) {
                                 "D$tempi"
                                 $tempnum = 0 #Avoid creating $0.00 transaction
                                 while ($tempnum -eq 0) {
-                                    $tempnum = [math]::Round((Get-Random -Minimum -100000.00 -Maximum 100000.00),2)
+                                    $tempnum = [math]::Round((Get-Random -Minimum -10000.00 -Maximum 10000.00),2)
                                 }
                                 "T$tempnum"
                                 if ($tempnum -lt 0) { #Determine if transaction is Withdrawal or Deposit
