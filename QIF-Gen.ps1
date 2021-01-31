@@ -193,7 +193,10 @@ while ($AllValid -eq $false) {
 
     elseif (($StartDateValid -eq $true) -and ($EndDateValid -eq $true) -and ($TransactionsValid -eq $true)) {
         $QIFContent =   for ($i = 0; $i -lt $TotalDays; $i++) {
-                            $jcount = Get-Random -Minimum 1 -Maximum $TransactionsPerDay
+                            $jcount = 1
+                            if ($TransactionsPerDay -gt 1) {
+                                $jcount = Get-Random -Minimum 1 -Maximum $TransactionsPerDay
+                            }
                             for ($j = 0; $j -lt $jcount; $j++) {
                                 $tempi = $StartDate.AddDays($i).ToString('dd/MM/yyyy')
                                 "D$tempi"
