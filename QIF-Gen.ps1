@@ -1,4 +1,4 @@
-$revision = 'v0.8'
+$revision = 'v0.9'
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
 # Clear variables if used Globally
