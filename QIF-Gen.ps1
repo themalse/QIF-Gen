@@ -87,13 +87,13 @@ function Update-UI {
     if ($StartDateValid[1] -eq $false) {
         Write-Host $StartDate -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
     }   else {
-        Write-Host $StartDate.ToString("d/M/yyyy") -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
+        Write-Host $StartDate.ToString("d\/M\/yyyy") -ForegroundColor $StartDateCol[2] -BackgroundColor $StartDateCol[3]
         }
     Write-Host "End Date: " -NoNewline -ForegroundColor $EndDateCol[0] -BackgroundColor $EndDateCol[1]
     if ($EndDateValid[1] -eq $false) {
         Write-Host $EndDate -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
     }   else {
-            Write-Host $EndDate.ToString("d/M/yyyy") -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
+            Write-Host $EndDate.ToString("d\/M\/yyyy") -ForegroundColor $EndDateCol[2] -BackgroundColor $EndDateCol[3]
             Write-Host 'Days in range: ' -NoNewline -ForegroundColor $EndDateCol[0] -BackgroundColor $EndDateCol[1]
         }
     Write-Host $TotalDays -ForegroundColor $ValidCol[2] -BackgroundColor $ValidCol[3]
@@ -147,7 +147,7 @@ while ($AllValid -eq $false) {
                         $EndDate = $EndDateValid[0]
                         if ($StartDate -gt $EndDate) {
                             $EndDateValid[1] = $false
-                            $EndDate = $EndDate.ToString("d/M/yyyy")
+                            $EndDate = $EndDate.ToString("d\/M\/yyyy")
                             Update-UI
                             Write-Host 'End Date' -NoNewline -ForegroundColor $InvalidCol[0] -BackgroundColor $InvalidCol[1]
                             Write-Host ' cannot be before the Start Date' -ForegroundColor $DefaultCol[0] -BackgroundColor $DefaultCol[1]
@@ -198,7 +198,7 @@ while ($AllValid -eq $false) {
                                 $jcount = Get-Random -Minimum 1 -Maximum $TransactionsPerDay
                             }
                             for ($j = 0; $j -lt $jcount; $j++) {
-                                $tempi = $StartDate.AddDays($i).ToString('dd/MM/yyyy')
+                                $tempi = $StartDate.AddDays($i).ToString('dd\/MM\/yyyy')
                                 "D$tempi"
                                 $tempnum = 0 #Avoid creating $0.00 transaction
                                 while ($tempnum -eq 0) {
